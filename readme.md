@@ -1,39 +1,72 @@
 # Solitaire Solver Studio
 
-A Streamlit app with solvers for TriPeaks, Pyramid and Freecell.
+A Streamlit app with solvers, board previews, and interactive step-by-step playback for **TriPeaks**, **Pyramid**, and **Freecell** Solitaire.
 
 ## Setup
 
-```
+```bash
 python -m venv .venv
+# Windows
 .venv\Scripts\activate
+# macOS / Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
-## Run
+## Run Locally
 
-```
+```bash
 streamlit run main_app.py
 ```
 
-Pick a game from the sidebar, enter the deck, and click Solve.
+Pick a game from the sidebar—or link directly to `/tripeaks`, `/pyramid`, or `/freecell`—enter (or generate) a 52-card deck, preview the layout, and click **Solve**.
 
-## Deck input
+## Deck Input
 
-Cards are comma-separated, e.g. `9H, 5S, 6C, ...` (`T` = 10; suits `H D C S`). Enter all 52 cards.
+Enter all 52 cards separated by **commas, spaces, semicolons, or newlines**, e.g. `9H, 5S, 10C, KD ...`.
+Both `10` and `T` are accepted for tens; suits are `S H D C` (case-insensitive).
 
-- **TriPeaks / Pyramid:** the first 28 cards are the board, the remaining 24 are the stock.
-- **Freecell:** cards are dealt across 8 cascades, left to right, row by row.
+- **TriPeaks:** Cards 1–28 form the 4-row peaks (top to bottom, left to right). **Card 29** starts face-up on the waste pile, and Cards 30–52 form the 23-card stock pile.
+- **Pyramid:** Cards 1–28 form the 7-row pyramid (top to bottom, left to right). Cards 29–52 form the 24-card stock pile.
+- **Freecell:** Cards 1–52 are dealt across 8 cascades, left to right, row by row.
 
-## Options
+Quick-fill buttons (**Random Deal**, **Sample Deal**, **Ordered Deck**, **Clear**) and an expandable **Board Preview** are available on every page.
 
-- **Minimize Moves:** searches deeper for the shortest solution (slower).
-- **Freecell goals:** clear the whole board, a specific card, or chosen ranks, each with an optional move limit.
-- Searches pause after 60 seconds so you can continue or stop and keep the best result so far.
+## Game Options & Search Controls
 
-## Files
+- **TriPeaks:** King–Ace Wrapping toggle; **Minimize Stock Draws** (Layered 0-1 BFS).
+- **Pyramid:** Stock Passes (`1`, `2`, `3`, or `Unlimited`), **Minimize Stock Draws** (binary search), and **Standard Waste Rules** toggle (strict drawn-card + waste-top pairing vs. relaxed waste pairing).
+- **Freecell:** Goals (clear whole board, single target card, or chosen ranks), optional **Move Limit**, **Minimize Moves** (weighted best-first → A\*), **Allow Foundation → Cascade**, and **Atomic Move Counting**.
+- **Search Controls:** Active search timer (excluding paused time), mid-search **Stop**, configurable pause prompt interval (`30s`–`300s`), and configurable memory safety state cap. Solutions can be copied as text or stepped through visually in the **Step-by-Step Playback** tab.
 
-- `main_app.py` – entry point and navigation
-- `tripeaks_solver.py`, `pyramid_solver.py`, `freecell_solver.py` – solvers and pages
-- `shared_models.py` – `Card` and helpers
-- `search_control.py` – search timing and stop/continue handling
+## Docker
+
+Build and run with the default `/solitaire-solver` base path:
+
+```bash
+docker build -t solitaire-solver .
+docker run -p 8501:8501 solitaire-solver
+# Open http://localhost:8501/solitaire-solver
+```
+
+To serve at root (`http://localhost:8501/`) instead:
+
+```bash
+docker run -p 8501:8501 -e STREAMLIT_SERVER_BASE_URL_PATH="" solitaire-solver
+```
+
+## Testing & Benchmarks
+
+```bash
+pip install -r requirements-dev.txt
+pytest -v
+python tests/benchmarks.py
+```
+
+## Project Layout
+
+- `main_app.py` – Streamlit entry point and multipage navigation
+- `solvers/` – pure-Python solver engines (`models.py`, `search_control.py`, `tripeaks.py`, `pyramid.py`, `freecell.py`, `replay.py`)
+- `ui/` – shared Streamlit components (`deck_input.py`, `job_runner.py`, `board_views.py`) and game pages (`ui/pages/`)
+- `tests/` – unit tests, independent move-legality verifiers (`verifiers.py`), and benchmarks

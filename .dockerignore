@@ -1,0 +1,12 @@
+.git/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+.vscode/
+.idea/
+.DS_Store
+Solitaire-Solver.code-workspace
+requirements-dev.txt
+tests/
